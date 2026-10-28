@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>server</artifactId>
+        <groupId>com.hobozoo.aiqq</groupId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+    <description>
+        封装dao和interface的api，依赖dao和interface
+        与dao通过DO对象交互
+        咦：对接第三方的interface项目也应该暴漏通用的DTO和接口。
+        alibaba手册描述这一层的目的是:
+        1.封装第三方接口
+        2.封装dao
+        3.对service层通用能力的下沉，如缓存，中间件通用处理
+    </description>
+    <artifactId>manager</artifactId>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.hobozoo.aiqq</groupId>
+            <artifactId>dao</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.hobozoo.aiqq</groupId>
+            <artifactId>interface</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
