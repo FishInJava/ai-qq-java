@@ -65,6 +65,18 @@ pwsh -File .opencode/skills/test-quality-evaluator/scripts/coverage-summary.ps1 
 测试与 JaCoCo 已配置在 `server/pom.xml`，新增模块无需重复声明。
 运行前确认 `mvn -v` 使用 JDK 21（本机若 `JAVA_HOME` 指向 Java 8 需先切换）。
 
+## 换行符与跨平台
+
+Windows / Linux / macOS 均可开发，换行符策略由仓库根 `.gitattributes` 固定，不依赖个人 `core.autocrlf` 设置：
+
+| 类型 | 库内存储 | 检出 |
+|---|---|---|
+| 源码、配置、文档 | LF | LF |
+| `.bat` / `.cmd` / `.ps1` | LF | CRLF |
+| `.jar`、图片等二进制 | 原样 | 原样 |
+
+老仓库首次应用该策略后，如需让工作区与属性一致，执行一次 `git add --renormalize .`。
+
 ## 接口
 
 | 路径 | 说明 |
