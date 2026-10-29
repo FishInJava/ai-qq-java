@@ -49,6 +49,22 @@ java -jar controller/target/controller-1.0-SNAPSHOT.jar
 | `DB_USER` | `root` |
 | `DB_PASSWORD` | 空 |
 
+## 测试
+
+```bash
+# 仓库根目录执行
+mvn -f server/pom.xml test
+```
+
+覆盖率报告生成在各模块 `target/site/jacoco/index.html`，聚合查看：
+
+```powershell
+pwsh -File .opencode/skills/test-quality-evaluator/scripts/coverage-summary.ps1 -Root server
+```
+
+测试与 JaCoCo 已配置在 `server/pom.xml`，新增模块无需重复声明。
+运行前确认 `mvn -v` 使用 JDK 21（本机若 `JAVA_HOME` 指向 Java 8 需先切换）。
+
 ## 接口
 
 | 路径 | 说明 |
