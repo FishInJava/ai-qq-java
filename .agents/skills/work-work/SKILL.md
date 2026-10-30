@@ -43,9 +43,10 @@ description: work work 模式，通常用来解锁某些特定的工作流
 	2.subAgent不能开启subAgent。
 	3.子代理定义和父代理需要传递的内容：读 `.agents/agents/playbook-agent.md`。
 	4.父代理处理子代理的返回：读 `.agents/agents/playbook-agent.md`。
+	5.子代理的注册文件是 `.omp/agents/playbook-agent.md`（薄壳，正文指向第 3 条的路径）；它设了 `spawns: ""`，harness 层禁止递归。派活时 `agent` 填 `playbook-agent`。
 
 ## 解锁工作流
-    所有工作流列表，读 `.agents\skills\work-work\playbooks`
+    所有工作流列表，读 `.agents/skills/work-work/playbooks`
 	
     1.**test-pb**
 

@@ -3,10 +3,10 @@
 	所有Agent都要阅读的prompt。
 
 ## 通用规则
-    1.如果是harness相关代码，设计方案时必须要考虑通用性，不能使用某个Agent特有的功能，用户在工作区会用很多Agent开启Session。
+    1.如果是harness相关文档，比如skill，command，设计时必须要考虑通用性，本项目可能有多个用户使用不同的Agent，比如deepseek harness，hermess，claude，opencode.
 
 ## 技术栈
-	后端：JDK21，Maven
+	后端：JDK21，Mavens
 	前端：
 
 ## 代码注释

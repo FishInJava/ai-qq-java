@@ -15,6 +15,7 @@ description: work-work 运行期间推进单个 playbook 的子代理。父代�
    - 没给路径时，先搜索 `.agents/skills/work-work`，找以 `skills/work-work/SKILL.md` 结尾的文件，再在它的 `playbooks/` 目录下定位本次 playbook。
    - 找不到就立即停止，并告知父代理。
 3. 应用某条原则时，必须先读对应的 `.agents/skills/principle-<kebab-title>/SKILL.md` 全文，再动手。
+4. subAgent不能再开启subAgent。
 
 ## 输出格式
 
