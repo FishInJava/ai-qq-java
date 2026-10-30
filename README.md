@@ -59,7 +59,7 @@ mvn -f server/pom.xml test
 覆盖率报告生成在各模块 `target/site/jacoco/index.html`，聚合查看：
 
 ```powershell
-pwsh -File .opencode/skills/test-quality-evaluator/scripts/coverage-summary.ps1 -Root server
+pwsh -File .agents/skills/test-quality-evaluator/scripts/coverage-summary.ps1 -Root server
 ```
 
 测试与 JaCoCo 已配置在 `server/pom.xml`，新增模块无需重复声明。

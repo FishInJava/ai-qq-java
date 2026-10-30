@@ -130,7 +130,7 @@ server/<module>/target/site/jacoco/
 聚合脚本：
 
 ```powershell
-pwsh -File .opencode/skills/test-quality-evaluator/scripts/coverage-summary.ps1 -Root server
+pwsh -File .agents/skills/test-quality-evaluator/scripts/coverage-summary.ps1 -Root server
 ```
 
 ### Lombok
@@ -277,10 +277,10 @@ mvn -f server/pom.xml clean test
 
 # 2) 覆盖率
 mvn -f server/pom.xml org.jacoco:jacoco-maven-plugin:prepare-agent clean test org.jacoco:jacoco-maven-plugin:report
-pwsh -File .opencode/skills/test-quality-evaluator/scripts/coverage-summary.ps1 -Root server
+pwsh -File .agents/skills/test-quality-evaluator/scripts/coverage-summary.ps1 -Root server
 
 # 3) 反模式扫描
-pwsh -File .opencode/skills/test-quality-evaluator/scripts/scan-test-smells.ps1 -Root .
+pwsh -File .agents/skills/test-quality-evaluator/scripts/scan-test-smells.ps1 -Root .
 
 # 4) 集成测试（如有 *IT.java 且配置了 Failsafe）
 mvn -f server/pom.xml verify

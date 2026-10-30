@@ -1,5 +1,5 @@
 ---
-name: Test Quality
+name: test-quality-evaluator
 description: 评估 Java/Maven 仓库（Spring Boot + JUnit 5 + Mockito + AssertJ + JaCoCo）的测试可用性，检测 AI 自欺欺人测试（确认偏误），输出覆盖率、自欺欺人与精确率三维评分，并给出可执行的改进指令。用户提到测试质量、测试可用性、覆盖率、自欺欺人测试、AI 确认偏误、测试有效性、改进测试或要求评估现有测试时使用。
 ---
 
@@ -119,7 +119,7 @@ mvn -f server/pom.xml -pl common -am `
 - 聚合汇总用本 skill 自带脚本：
 
   ```powershell
-  pwsh -File .opencode/skills/test-quality-evaluator/scripts/coverage-summary.ps1 -Root server
+  pwsh -File .agents/skills/test-quality-evaluator/scripts/coverage-summary.ps1 -Root server
   ```
 
 **读取顺序**：先看 **分支覆盖率（BRANCH）**，再看行/方法覆盖率。
@@ -176,9 +176,9 @@ Self-Deception = min(100%, Σ(命中反模式的测试数 × 权重) / 总测试
 **辅助脚本**（启发式，结果必须人工复核，不能直接当结论）：
 
 ```powershell
-pwsh -File .opencode/skills/test-quality-evaluator/scripts/scan-test-smells.ps1 -Root .
+pwsh -File .agents/skills/test-quality-evaluator/scripts/scan-test-smells.ps1 -Root .
 # 机器可读：
-pwsh -File .opencode/skills/test-quality-evaluator/scripts/scan-test-smells.ps1 -Root . -Json
+pwsh -File .agents/skills/test-quality-evaluator/scripts/scan-test-smells.ps1 -Root . -Json
 ```
 
 脚本会按测试方法输出：是否含边界值、异常路径、参数化、纯 mock 断言、
@@ -397,10 +397,10 @@ mvn -f server/pom.xml -pl service -am test
 
 # 覆盖率
 mvn -f server/pom.xml org.jacoco:jacoco-maven-plugin:prepare-agent clean test org.jacoco:jacoco-maven-plugin:report
-pwsh -File .opencode/skills/test-quality-evaluator/scripts/coverage-summary.ps1 -Root server
+pwsh -File .agents/skills/test-quality-evaluator/scripts/coverage-summary.ps1 -Root server
 
 # 自欺欺人扫描
-pwsh -File .opencode/skills/test-quality-evaluator/scripts/scan-test-smells.ps1 -Root .
+pwsh -File .agents/skills/test-quality-evaluator/scripts/scan-test-smells.ps1 -Root .
 
 # 集成测试（若使用 *IT.java + Failsafe）
 mvn -f server/pom.xml verify

@@ -1,0 +1,21 @@
+{
+  "name": "ai-qq-java",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "决策笔记校验入口。只用 Node 24 的类型剥离直接跑 .ts 脚本，不装任何第三方依赖。",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "verify-notes": "node .agents/skills/write-notes-like-deepseek/scripts/verify-agent-note-tree.ts && node .agents/skills/write-notes-like-deepseek/scripts/verify-agent-note-format.ts && node .agents/skills/write-notes-like-deepseek/scripts/verify-archived-agent-notes.ts",
+    "verify-note-tree": "node .agents/skills/write-notes-like-deepseek/scripts/verify-agent-note-tree.ts",
+    "verify-note-format": "node .agents/skills/write-notes-like-deepseek/scripts/verify-agent-note-format.ts",
+    "verify-archived": "node .agents/skills/write-notes-like-deepseek/scripts/verify-archived-agent-notes.ts",
+    "verify-archived-write": "node .agents/skills/write-notes-like-deepseek/scripts/verify-archived-agent-notes.ts --write",
+    "archive-note": "node .agents/skills/write-notes-like-deepseek/scripts/archive-agent-note.ts",
+    "check-anchors": "node .agents/skills/write-notes-like-deepseek/scripts/check-note-anchors.ts",
+    "init-board": "node .agents/skills/write-notes-like-deepseek/scripts/build-board.ts --init board.html \"ai-qq-java 决策看板\"",
+    "bundle-board": "node .agents/skills/write-notes-like-deepseek/scripts/build-board.ts --bundle .agents/notes demo.html \"ai-qq-java 决策看板\""
+  }
+}

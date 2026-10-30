@@ -79,10 +79,10 @@ bin/
 Thumbs.db
 desktop.ini
 
-### 本地工具缓存（.opencode/skills 属于项目资产，需入库）
+### 本地工具缓存（.agents/skills 属于项目资产，需入库）
 .codegraph/
-.opencode/cache/
-.opencode/tmp/
+node_modules/
+temp/*.*
 
 ### 临时文件
 *.tmp
