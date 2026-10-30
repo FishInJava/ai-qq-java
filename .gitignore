@@ -82,7 +82,10 @@ desktop.ini
 ### 本地工具缓存（.agents/skills 属于项目资产，需入库）
 .codegraph/
 node_modules/
-temp/*.*
+
+### 临时工作区：目录入库，内容全部忽略
+temp/*
+!temp/.gitkeep
 
 ### 临时文件
 *.tmp
