@@ -14,13 +14,13 @@ Status: implemented
 
 ## Decision
 
-只读协议正文常驻 `AGENTS.md` 的「只读协议」节。每个会话加载项目时它随工作区指令进入上下文，不依赖斜杠命令注册，也不依赖模型主动加载 skill。
+read-mode 协议正文常驻 `AGENTS.md` 的「read-mode规则」节。每个会话加载项目时它随工作区指令进入上下文，不依赖斜杠命令注册，也不依赖模型主动加载 skill。
 
-- 激活只看用户消息里的 `/read-only`、`/只读`、「只读调查」；退出只看「退出只读」。删除 `[READ-ONLY]` 标记这个触发词，避免「提到即触发」。
+- 激活只看用户消息里的 `/read-mode`、`/只读`、「只读调查」；退出只看「退出只读」。删除 `[READ-ONLY]` 标记这个触发词，避免「提到即触发」。
 - 边界写成表：允许 read / grep / glob / web 与只读 shell；禁止 edit / write / patch 与写入型 shell，含 `mvn clean test`、`npm install`、`git apply`。
 - `temp/` 是唯一写入例外，解决原规则 2 与规则 4 的冲突，并要求在回复里说明写了什么。
 - 越界必须自报「越界：<命令>」，让违反可见，而不是静默继续。
-- 三级载体分工固定：`AGENTS.md` 承载协议正文（常驻），`.agents/skills/read-only/SKILL.md` 承载判定细则与 subagent 交接模板（按需加载），`.agents/commands/read-only.md` 只服务会读命令目录的 harness（OpenCode / Claude Code），并在文件末尾写明这一点。
+- 三级载体分工固定：`AGENTS.md` 承载协议正文（常驻），`.agents/skills/read-mode/SKILL.md` 承载判定细则与 subagent 交接模板（按需加载），`.agents/commands/read-mode.md` 只服务会读命令目录的 harness（OpenCode / Claude Code），并在文件末尾写明这一点。
 
 ## Alternatives considered
 
@@ -51,4 +51,4 @@ Status: implemented
 
 - `npm run verify-notes` 通过。
 - skill 目录热更新已验证：改完 `SKILL.md` 的 description 后，本会话的 skill 目录立即刷新成新描述，说明 `dsh-skill-filesystem` 的 watch 生效。
-- 新会话是否真的带上协议，需要在下次开会话时看首轮回复有没有引用「只读协议」节；这是唯一无法在本会话内完成的验收。
+- 新会话是否真的带上协议，需要在下次开会话时看首轮回复有没有引用「read-mode规则」节；这是唯一无法在本会话内完成的验收。

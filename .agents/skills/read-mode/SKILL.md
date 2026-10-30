@@ -1,6 +1,6 @@
 ---
-name: read-only
-description: read-only模式
+name: read-mode
+description: read-mode 模式：以读为主，只允许写 temp/。
 ---
 
 ## 规则

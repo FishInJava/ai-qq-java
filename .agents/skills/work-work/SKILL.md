@@ -39,12 +39,13 @@ description: work work 模式，通常用来解锁某些特定的工作流
 	- **Explain the Number.** Apply before you measure, and before you trust, report, or act on a number you measured (a speedup, a regression, a throughput, a latency, or an eval result). Find what limits it, and rule out that it measured something other than the work you think.
 	
 ## subAgent
-	1.允许开启subAgent：subAgent可以修改源码，可以使用以下工作流
-		-{占位符}:定位到某个workflow
-	2.当前最多支持开启1个subAgent
-	3.subAgent不能开启subAgent
-		
-	
+	1.允许开启subAgent：subAgent,能解锁某些工作流。
+	2.subAgent不能开启subAgent。
+	3.子代理定义和父代理需要传递的内容：读 `.agents/agents/playbook-agent.md`。
+	4.父代理处理子代理的返回：读 `.agents/agents/playbook-agent.md`。
+
 ## 解锁工作流
-	1.{占位符}:定位到某个workflow
+    所有工作流列表，读 `.agents\skills\work-work\playbooks`
+	
+    1.**test-pb**
 

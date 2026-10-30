@@ -1,6 +1,15 @@
 # AGENTS.md
 
-	> 你是这个仓库里的实现代理。读完本文件再动手；本文件只介绍“项目结构、约束文件在哪、如何运行”。
+	1.你是这个仓库里的实现代理。读完本文件再动手；本文件只介绍“项目结构、约束文件在哪、如何运行”。
+    2.你遵守`read-mode规则`
+
+## read-mode规则
+	细则见 `.agents/skills/read-mode/SKILL.md`。
+
+	1. 不允许修改任何 AGENTS.md、RULES.md。
+	2. 不能对 server 和 website 目录做增加，删除，修改操作。
+	3. 所有临时产出物：脚本、.md，都必须放在 temp 目录下。
+    4. 不允许开启subAgent
 
 ## 项目一句话
 	一个Java项目骨架
@@ -23,7 +32,7 @@
 
 ## 运行方式
 
-	# 构建 / 测试（JAVA_HOME 需指向 JDK 21）
+	# 构建 / 测试
 	mvn -f server/pom.xml clean test
 
 	# 决策笔记校验（Node >= 24，无需 npm install）
