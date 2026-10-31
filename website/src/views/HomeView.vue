@@ -1,15 +1,34 @@
 <script setup lang="ts">
-import { useAppStore } from '@/stores/app'
+import { onMounted, ref } from 'vue'
 
-const app = useAppStore()
+const count = ref(0)
+const failed = ref(false)
+
+/**
+ * 请求后端计数接口
+ */
+async function request(url: string, method = 'GET') {
+  try {
+    const res = await fetch(url, { method })
+    if (!res.ok) throw new Error(String(res.status))
+    count.value = (await res.json()) as number
+    failed.value = false
+  } catch {
+    failed.value = true
+  }
+}
+
+onMounted(() => request('/api/counter'))
 </script>
 
 <template>
   <main class="home">
-    <el-card header="前端脚手架已就绪">
-      <p>Element Plus 与 Pinia 均已接入，开发代理指向后端 8080 端口。</p>
-      <el-button type="primary" @click="app.visits++">点我加一</el-button>
-      <el-tag class="visits">点击次数：{{ app.visits }}</el-tag>
+    <el-card header="后端计数器">
+      <el-button type="primary" @click="request('/api/counter/increment', 'POST')">
+        点我加一
+      </el-button>
+      <el-tag class="count">当前值：{{ count }}</el-tag>
+      <p v-if="failed" class="error">后端请求失败，请确认服务已启动。</p>
     </el-card>
   </main>
 </template>
@@ -21,7 +40,12 @@ const app = useAppStore()
   padding: 0 1rem;
 }
 
-.visits {
+.count {
   margin-left: 0.75rem;
+}
+
+.error {
+  margin-top: 1rem;
+  color: var(--el-color-danger);
 }
 </style>
