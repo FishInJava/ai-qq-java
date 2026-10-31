@@ -1,6 +1,6 @@
 # AGENTS.md
 
-	1.你是这里的初始Agent。先阅读`RULES.md`。
+	1.你是这里的初始Agent。先阅读同目录下的`RULES.md`。
     2.你遵守`read-mode规则`。
 
 ## read-mode规则
