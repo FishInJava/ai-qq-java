@@ -3,7 +3,7 @@ name: work-work
 description: playbook就是某个具体工作流，如果确认要使用某个playbook，必须开启subAgent。
 ---
 ## 描述
-    设计目的：1.纰漏playbook目录 2.允许开启subAgent
+    设计目的：1.列出playbook目录 2.允许开启subAgent
 
 ## 必须遵守的规则
 	下面的「规则」部分是所有触发规则的依据。回复时，必须说明哪些原则影响了你的决策，以及这些原则具体改变了什么做法。
@@ -14,9 +14,10 @@ description: playbook就是某个具体工作流，如果确认要使用某个pl
 ## subAgent
 	-playbook-agent：`.agents/agents/playbook-agent.md`
 
-## playbooks（这种竖杠分割的形式，AI好看吗？）
+## playbooks
 	按需加载：只读本次要跑的那一个 playbook，其余不读。派活时把下表里的完整路径原样传给 `playbook-agent`。
 
 	| playbook | 何时用 | 路径 |
 	|---|---|---|
 	| test-pb | 测试相关工作流；Step 1 执行 `0test-skill` | `.agents/skills/work-work/playbooks/test-pb/test-playbook.md` |
+	| code-pb | 写代码工作流：写代码、本地测试、本地 commit | `.agents/skills/work-work/playbooks/code.md` |
