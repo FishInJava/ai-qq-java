@@ -65,6 +65,19 @@ pwsh -File .agents/skills/test-quality-evaluator/scripts/coverage-summary.ps1 -R
 测试与 JaCoCo 已配置在 `server/pom.xml`，新增模块无需重复声明。
 运行前确认 `mvn -v` 使用 JDK 21（`JAVA_HOME` 与 PATH 上的 `java` 可能不一致，以 `mvn -v` 为准）。
 
+## CI
+
+`.github/workflows/ci.yml` 在所有分支的 push 和所有 PR 上运行。
+
+| Job | 命令 | 检查内容 |
+|---|---|---|
+| `Backend build and tests` | `mvn -f server/pom.xml -B clean verify` | 编译、单测、打包，上传 surefire 与 JaCoCo 报告 |
+| `Decision notes validation` | `npm run verify-notes` | 决策笔记的树结构、格式、归档状态 |
+| `Frontend build` | `npm ci`、`npx eslint .`、`npm run build` | 依赖安装、lint、vue-tsc 类型检查、vite 打包 |
+| `CI` | 汇总上面三个 job | 作为分支保护的必填检查 |
+
+给 `main` 加门禁：Settings > Branches > Add branch protection rule，勾选 Require status checks to pass，把 `CI` 设为必需。这样任一 job 失败，合并按钮就不可用。
+
 ## 换行符与跨平台
 
 Windows / Linux / macOS 均可开发，换行符策略由仓库根 `.gitattributes` 固定，不依赖个人 `core.autocrlf` 设置：

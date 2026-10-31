@@ -1,0 +1,116 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend build and tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Build and run tests
+        run: mvn -f server/pom.xml -B clean verify
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: server/*/target/surefire-reports/
+          if-no-files-found: ignore
+
+      - name: Upload coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-reports
+          path: server/*/target/site/jacoco/
+          if-no-files-found: ignore
+
+  notes:
+    name: Decision notes validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Verify notes
+        run: npm run verify-notes
+
+  frontend:
+    name: Frontend build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: website
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npx eslint .
+
+      - name: Type check and build
+        run: npm run build
+
+      - name: Upload build output
+        uses: actions/upload-artifact@v4
+        with:
+          name: website-dist
+          path: website/dist/
+          if-no-files-found: ignore
+
+  ci:
+    name: CI
+    needs: [backend, notes, frontend]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Check job results
+        run: |
+          backend="${{ needs.backend.result }}"
+          notes="${{ needs.notes.result }}"
+          frontend="${{ needs.frontend.result }}"
+          echo "backend=$backend notes=$notes frontend=$frontend"
+          if [ "$backend" != "success" ] || [ "$notes" != "success" ] || [ "$frontend" != "success" ]; then
+            echo "::error::One or more CI jobs did not succeed."
+            exit 1
+          fi
