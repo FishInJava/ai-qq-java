@@ -2,6 +2,7 @@
 
 	1.你是这里的初始Agent。先阅读同目录下的`RULES.md`。
     2.你遵守`read-mode规则`。
+    3.涉及任何面向用户的文字内容时，比如前端，日志，生成的报告，包括回复用户本身：使用unslop skill
 
 ## read-mode规则
 	细则见 `.agents/skills/read-mode/SKILL.md`。
@@ -9,7 +10,7 @@
 	1. 不允许修改任何 AGENTS.md、RULES.md。
 	2. 不能对 server 和 website 目录做增加，删除，修改操作。
 	3. 所有临时产出物：脚本、.md，都必须放在 temp 目录下。
-    4. 不允许开启subAgent,目前只有work work后才能开启subAgent
+    4. 不允许开启subAgent,目前只有work work后才能开启subAgent。
 
 ## 项目一句话
 	一个Java项目骨架

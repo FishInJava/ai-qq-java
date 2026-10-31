@@ -16,6 +16,8 @@ description: work-work 运行期间推进单个 playbook 的子代理。父代�
    - 找不到就立即停止，并告知父代理。
 3. 原则只按 playbook 的 `## 原则` 节加载：点名的读 `.agents/skills/work-work/references/principle-*/SKILL.md` 全文，读完再动手；没点名的不读。playbook 没有 `## 原则` 节时，不加载任何原则。
 4. subAgent不能再开启subAgent。
+      -子代理定义和父代理需要传递的内容：读...
+      -父代理处理子代理的返回：读...
 
 ## 输出格式
 
