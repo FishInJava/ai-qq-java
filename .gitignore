@@ -1,6 +1,7 @@
 # ============================================================
 # ai-qq-java / .gitignore
-# Spring Boot 4 + Java 21 + Maven 多模块（源码根：server/）
+# 后端：Spring Boot 4 + Java 21 + Maven 多模块（源码根：server/）
+# 前端：Vite + Vue 3（源码根：website/）
 # 规则按类别分组，新增条目请放进对应分组
 # ============================================================
 
@@ -37,6 +38,20 @@ dependency-reduced-pom.xml
 .flattened-pom.xml
 buildNumber.properties
 .mvn/timing.properties
+
+### Website 前端（Vite + Vue 3，源码根：website/）
+# 目录内的脚手架默认规则在 website/.gitignore；这里保留同一批关键项，
+# 从仓库根也能一眼看到，并防止误删子级文件后产物被提交
+website/dist/
+website/dist-ssr/
+website/coverage/
+website/.vite/
+website/.eslintcache
+website/*.tsbuildinfo
+website/__screenshots__/
+website/cypress/videos/
+website/cypress/screenshots/
+website/vite.config.ts.timestamp-*.mjs
 
 ### 运行日志
 # 注意：log/ 只匹配目录，不会误伤 logback-spring.xml
@@ -77,7 +92,9 @@ out/
 bin/
 
 ### VS Code
-.vscode/
+# 只忽略工作区个人配置，推荐扩展清单允许入库（website/.gitignore 里有同样的例外）
+.vscode/*
+!.vscode/extensions.json
 
 ### 操作系统
 .DS_Store

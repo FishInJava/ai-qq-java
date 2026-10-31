@@ -22,7 +22,7 @@ description: 评估 Java/Maven 仓库（Spring Boot + JUnit 5 + Mockito + Assert
 | 测试依赖 | **无** `spring-boot-starter-test`、无 JUnit、无 JaCoCo、无 Surefire 配置 |
 | 测试源码 | **不存在** `src/test/java`，当前测试基线为 0 |
 | 业务代码 | `common` 工具类（`DateUtil`/`JsonUtil`/`CacheUtil`/`ThreadUtil`）、`controller` 的 `DemoController`、`service` 的并发示例、`dao` 的 MyBatis 骨架 |
-| 环境坑 | **`JAVA_HOME` 当前指向 Java 8**（`G:\JetBrains\java8`），PATH 上的 `java` 是 21；直接跑 `mvn` 会因 `release 21` 失败 |
+| 环境 | 项目要求 Java 21；以 `mvn -v` 实测为准，不要假设 `JAVA_HOME` 与 PATH 上的 `java` 一致 |
 
 **关键约束**：
 

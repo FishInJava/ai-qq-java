@@ -63,7 +63,7 @@ pwsh -File .agents/skills/test-quality-evaluator/scripts/coverage-summary.ps1 -R
 ```
 
 测试与 JaCoCo 已配置在 `server/pom.xml`，新增模块无需重复声明。
-运行前确认 `mvn -v` 使用 JDK 21（本机若 `JAVA_HOME` 指向 Java 8 需先切换）。
+运行前确认 `mvn -v` 使用 JDK 21（`JAVA_HOME` 与 PATH 上的 `java` 可能不一致，以 `mvn -v` 为准）。
 
 ## 换行符与跨平台
 
