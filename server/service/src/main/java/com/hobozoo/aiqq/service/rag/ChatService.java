@@ -31,6 +31,8 @@ public class ChatService {
     private static final int HISTORY_TURNS = 3;
     private static final int HISTORY_CHARS = 1200;
     private static final int CANDIDATES = 3;
+    private static final int MAX_ATTEMPTS = 2;
+    private static final int TITLE_CHARS = 40;
 
     private final LibraryDao library;
     private final RetrievalService retrieval;
@@ -176,7 +178,7 @@ public class ChatService {
     private ArkChatClient.Usage generate(List<Map<String, String>> messages, int[] firstToken,
                                          StringBuilder answer, CitationFilter citations, Listener listener,
                                          long startedAt) throws IOException {
-        for (int attempt = 1; attempt <= 2; attempt++) {
+        for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
             try {
                 return client.stream(messages, text -> {
                     if (firstToken[0] == 0) {
@@ -189,7 +191,7 @@ public class ChatService {
                     }
                 });
             } catch (IOException e) {
-                if (attempt == 2 || firstToken[0] != 0) {
+                if (attempt == MAX_ATTEMPTS || firstToken[0] != 0) {
                     throw e;
                 }
                 answer.setLength(0);
@@ -261,7 +263,7 @@ public class ChatService {
     }
 
     private static String title(String question) {
-        return question.length() <= 40 ? question : question.substring(0, 40);
+        return question.length() <= TITLE_CHARS ? question : question.substring(0, TITLE_CHARS);
     }
 
     private static String truncate(String text) {

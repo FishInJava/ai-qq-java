@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.hobozoo.aiqq.dao.IngestDao;
@@ -27,6 +29,10 @@ import com.hobozoo.aiqq.entity.rag.UploadResult;
  */
 @Service
 public class RagLibraryService {
+
+    private static final Logger log = LoggerFactory.getLogger(RagLibraryService.class);
+    private static final int MAX_DOCUMENTS = 1000;
+    private static final int MAX_JOBS = 500;
 
     public record Box(int pageNo, double x0, double y0, double x1, double y1) {
     }
@@ -59,7 +65,7 @@ public class RagLibraryService {
     }
 
     public List<DocumentRow> documents(String status, int limit) {
-        return library.listDocuments(status, Math.min(Math.max(limit, 1), 1000));
+        return library.listDocuments(status, Math.min(Math.max(limit, 1), MAX_DOCUMENTS));
     }
 
     public DocumentRow document(long id) {
@@ -85,7 +91,7 @@ public class RagLibraryService {
     }
 
     public List<JobRow> jobs(int limit) {
-        return library.listJobs(Math.min(Math.max(limit, 1), 500));
+        return library.listJobs(Math.min(Math.max(limit, 1), MAX_JOBS));
     }
 
     public JobRow job(long id) {
@@ -108,7 +114,7 @@ public class RagLibraryService {
         try {
             lucene.delete(documentId);
         } catch (IOException e) {
-            throw new IllegalStateException("删除索引失败：" + e.getMessage(), e);
+            log.warn("删除索引失败 document={}", documentId, e);
         }
     }
 

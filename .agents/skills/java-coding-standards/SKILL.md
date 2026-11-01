@@ -14,13 +14,9 @@ Standards for readable, maintainable Java (17+) code in Spring Boot and Quarkus 
 
 ## 适用范围
 
-本仓库是 Spring Boot 4 / Java 21 / MyBatis 多模块工程，`[QUARKUS]` 标记的段落一律跳过，只看 `[SPRING]` 与无标记的部分。
+适用于任何源码目录下的 Spring Boot 服务；带 `[QUARKUS]` 标记的段落只在 Quarkus 工程里适用，其它工程跳过。
 
-三处与仓库现状不同，以仓库为准：
-
-- **包结构**。文末 `[SPRING] Maven/Gradle` 那套 `controller/service/repository/domain/dto` 不是本仓库结构。本仓库按 `AGENTS.md` 分模块：`common/entity/dao/manager/interface/service/controller/mq/quartz/rpc/web`，包名形如 `com.hobozoo.aiqq.<模块>`，不叫 `com.example.app`。
-- **注释**。正文示例里的注释不受 `RULES.md` 那条约束；本仓库代码注释只写方法功能，最多 3 行、每行不超过 10 字。
-- **Lombok**。`server/pom.xml` 有 Lombok，实体实际在用：`entity/demo/Cat.java` 上是 `@Data @Builder @NoArgsConstructor @AllArgsConstructor`，和文中「record 或只用 getter 的类」不是一套。按仓库现状用 Lombok，别为了贴合本文把 `@Data` 拆成手写 getter。
+包结构、模块划分、注释风格、Lombok 这类与具体工程绑定的约定不写进本规范，以该工程的 `AGENTS.md`、`RULES.md` 为准；两者冲突时工程约定优先。
 
 ## When to Use
 
@@ -251,6 +247,8 @@ public <T extends Identifiable> Map<Long, T> indexById(Collection<T> items) { ..
 ```
 
 ## Project Structure
+
+以下只是示意，按工程实际模块划分调整，不要照抄包名与分层。
 
 ### [SPRING] Maven/Gradle
 

@@ -33,6 +33,7 @@ import org.springframework.stereotype.Component;
 
 import com.hobozoo.aiqq.entity.rag.ChunkHit;
 import com.hobozoo.aiqq.entity.rag.ChunkRow;
+import com.hobozoo.aiqq.entity.rag.IndexEntry;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -104,10 +105,10 @@ public class LuceneIndexService {
         searcherManager.maybeRefreshBlocking();
     }
 
-    public synchronized void indexOne(long documentId, long chunkId, long parentId, String text, int pageFrom,
-                                      int pageTo, String sectionPath) throws IOException {
-        writer.deleteDocuments(new Term("id", String.valueOf(chunkId)));
-        add(documentId, chunkId, parentId, text, pageFrom, pageTo, sectionPath);
+    public synchronized void indexOne(IndexEntry entry) throws IOException {
+        writer.deleteDocuments(new Term("id", String.valueOf(entry.chunkId())));
+        add(entry.documentId(), entry.chunkId(), entry.parentId(), entry.text(), entry.pageFrom(), entry.pageTo(),
+                entry.sectionPath());
         writer.commit();
         searcherManager.maybeRefreshBlocking();
     }
@@ -149,14 +150,13 @@ public class LuceneIndexService {
         }
         IndexSearcher searcher = searcherManager.acquire();
         try {
-            TopDocsResult result = new TopDocsResult();
+            List<ChunkHit> hits = new ArrayList<>();
             for (ScoreDoc scoreDoc : searcher.search(query, topK).scoreDocs) {
                 Document document = searcher.storedFields().document(scoreDoc.doc);
-                long chunkId = Long.parseLong(document.get("id"));
-                long parentId = Long.parseLong(document.get("parentId"));
-                result.hits.add(new ChunkHit(chunkId, parentId, scoreDoc.score));
+                hits.add(new ChunkHit(Long.parseLong(document.get("id")),
+                        Long.parseLong(document.get("parentId")), scoreDoc.score));
             }
-            return result.hits;
+            return hits;
         } finally {
             searcherManager.release(searcher);
         }
@@ -164,9 +164,5 @@ public class LuceneIndexService {
 
     public int documentCount() {
         return writer.getDocStats().numDocs;
-    }
-
-    private static final class TopDocsResult {
-        private final List<ChunkHit> hits = new ArrayList<>();
     }
 }

@@ -12,12 +12,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import com.hobozoo.aiqq.common.util.JsonText;
 import com.hobozoo.aiqq.dao.IngestDao;
 import com.hobozoo.aiqq.dao.LibraryDao;
 import com.hobozoo.aiqq.dao.SearchDao;
 import com.hobozoo.aiqq.entity.rag.BlockDraft;
 import com.hobozoo.aiqq.entity.rag.BlockRow;
 import com.hobozoo.aiqq.entity.rag.ChildDraft;
+import com.hobozoo.aiqq.entity.rag.ChunkInsert;
 import com.hobozoo.aiqq.entity.rag.ChunkRow;
 import com.hobozoo.aiqq.entity.rag.DocumentRow;
 import com.hobozoo.aiqq.entity.rag.EventRow;
@@ -25,7 +27,6 @@ import com.hobozoo.aiqq.entity.rag.PageDraft;
 import com.hobozoo.aiqq.entity.rag.ParentDraft;
 import com.hobozoo.aiqq.entity.rag.PipelineConfig;
 import com.hobozoo.aiqq.entity.rag.RunRow;
-import com.hobozoo.aiqq.common.util.JsonText;
 
 /**
  * 八个节点的执行与断点续跑。
@@ -35,6 +36,7 @@ public class IngestService {
 
     private static final Logger log = LoggerFactory.getLogger(IngestService.class);
     private static final String PIPELINE = "rag";
+    private static final int SAMPLE_CHARS = 2000;
 
     private final LibraryDao library;
     private final IngestDao ingest;
@@ -88,71 +90,67 @@ public class IngestService {
         BlockAssembler.Assembled assembled = null;
         int resumeIndex = nodes.indexOf(resumeFrom);
 
-        try {
-            for (int index = resumeIndex; index < nodes.size(); index++) {
-                String node = nodes.get(index);
-                int progress = (int) Math.round((index + 1) * 100.0 / nodes.size());
-                if (jobId != null) {
-                    library.touchJobProgress(jobId, node, progress);
-                }
-                long startedAt = System.nanoTime();
-                String detail;
-                String message = null;
-                try {
-                    if ("parse".equals(node)) {
-                        extraction = extractor.extract(Path.of(document.path()));
-                        if (extraction.locked()) {
-                            library.insertEvent(runId, node, "failed", elapsed(startedAt),
-                                    JsonText.object(Map.of("locked", true)), "加密且口令非空");
-                            library.finishRun(runId, "failed", JsonText.object(Map.of("node", node)));
-                            library.updateDocumentStatus(documentId, "locked", "需要口令");
-                            return;
-                        }
-                    }
-                    detail = switch (node) {
-                        case "parse" -> parse(documentId, version, extraction);
-                        case "tables" -> {
-                            assembled = assemble(assembled, extraction, config, document);
-                            yield insertBlocks(documentId, assembled, true);
-                        }
-                        case "blocks" -> {
-                            assembled = assemble(assembled, extraction, config, document);
-                            yield insertBlocks(documentId, assembled, false);
-                        }
-                        case "chunk" -> chunk(documentId, config);
-                        case "embed" -> embed(documentId);
-                        case "index_vector" -> JsonText.object(
-                                Map.of("embeddings", search.countEmbeddings(documentId, embedding.name())));
-                        case "index_lexical" -> {
-                            NodeResult result = lexical(documentId);
-                            message = result.message();
-                            yield result.detail();
-                        }
-                        case "finalize" -> {
-                            library.updateDocumentStatus(documentId, "ready", null);
-                            yield JsonText.object(Map.of("status", "ready"));
-                        }
-                        default -> {
-                            message = "未实现";
-                            yield JsonText.object(Map.of("skipped", true));
-                        }
-                    };
-                } catch (Exception e) {
-                    library.insertEvent(runId, node, "failed", elapsed(startedAt),
-                            JsonText.object(Map.of("error", String.valueOf(e.getMessage()))), e.getMessage());
-                    library.finishRun(runId, "failed", JsonText.object(Map.of("node", node)));
-                    library.updateDocumentStatus(documentId, "failed", node + ": " + e.getMessage());
-                    throw new IllegalStateException("管线节点失败：" + node, e);
-                }
-                library.insertEvent(runId, node, message == null ? "ok" : "skipped", elapsed(startedAt), detail,
-                        message);
+        for (int index = resumeIndex; index < nodes.size(); index++) {
+            String node = nodes.get(index);
+            int progress = (int) Math.round((index + 1) * 100.0 / nodes.size());
+            if (jobId != null) {
+                library.touchJobProgress(jobId, node, progress);
             }
-
-            library.finishRun(runId, "succeeded", JsonText.object(Map.of("nodes", nodes.size())));
-            log.info("导入完成 document={} attempt={}", documentId, attempt);
-        } catch (RuntimeException e) {
-            throw e;
+            long startedAt = System.nanoTime();
+            String detail;
+            String message = null;
+            try {
+                if ("parse".equals(node)) {
+                    extraction = extractor.extract(Path.of(document.path()));
+                    if (extraction.locked()) {
+                        library.insertEvent(runId, node, "failed", elapsed(startedAt),
+                                JsonText.object(Map.of("locked", true)), "加密且口令非空");
+                        library.finishRun(runId, "failed", JsonText.object(Map.of("node", node)));
+                        library.updateDocumentStatus(documentId, "locked", "需要口令");
+                        return;
+                    }
+                }
+                detail = switch (node) {
+                    case "parse" -> parse(documentId, version, extraction);
+                    case "tables" -> {
+                        assembled = assemble(assembled, extraction, config, document);
+                        yield insertBlocks(documentId, assembled, true);
+                    }
+                    case "blocks" -> {
+                        assembled = assemble(assembled, extraction, config, document);
+                        yield insertBlocks(documentId, assembled, false);
+                    }
+                    case "chunk" -> chunk(documentId, config);
+                    case "embed" -> embed(documentId);
+                    case "index_vector" -> JsonText.object(
+                            Map.of("embeddings", search.countEmbeddings(documentId, embedding.name())));
+                    case "index_lexical" -> {
+                        NodeResult result = lexical(documentId);
+                        message = result.message();
+                        yield result.detail();
+                    }
+                    case "finalize" -> {
+                        library.updateDocumentStatus(documentId, "ready", null);
+                        yield JsonText.object(Map.of("status", "ready"));
+                    }
+                    default -> {
+                        message = "未实现";
+                        yield JsonText.object(Map.of("skipped", true));
+                    }
+                };
+            } catch (RuntimeException | IOException e) {
+                library.insertEvent(runId, node, "failed", elapsed(startedAt),
+                        JsonText.object(Map.of("error", String.valueOf(e.getMessage()))), e.getMessage());
+                library.finishRun(runId, "failed", JsonText.object(Map.of("node", node)));
+                library.updateDocumentStatus(documentId, "failed", node + ": " + e.getMessage());
+                throw new IllegalStateException("管线节点失败：" + node, e);
+            }
+            library.insertEvent(runId, node, message == null ? "ok" : "skipped", elapsed(startedAt), detail,
+                    message);
         }
+
+        library.finishRun(runId, "succeeded", JsonText.object(Map.of("nodes", nodes.size())));
+        log.info("导入完成 document={} attempt={}", documentId, attempt);
     }
 
     private String parse(long documentId, int version, PdfExtractor.Result extraction) {
@@ -161,7 +159,7 @@ public class IngestService {
         for (PdfExtractor.Page page : extraction.pages()) {
             pages.add(new PageDraft(page.pageNo(), page.width(), page.height(), page.rotation(),
                     page.charCount(), page.charCount() == 0));
-            if (sample.length() < 2000) {
+            if (sample.length() < SAMPLE_CHARS) {
                 page.lines().forEach(line -> sample.append(line.text()));
             }
         }
@@ -181,7 +179,7 @@ public class IngestService {
         if (result == null) {
             try {
                 result = extractor.extract(Path.of(document.path()));
-            } catch (Exception e) {
+            } catch (IOException e) {
                 throw new IllegalStateException("重新解析失败", e);
             }
         }
@@ -248,8 +246,9 @@ public class IngestService {
             long firstBlockId = parent.blockIndexes().isEmpty() ? -1
                     : rows.get(parent.blockIndexes().get(0)).id();
             String markdown = parent.table() ? toMarkdown(parent.text()) : null;
-            long parentId = ingest.insertChunk(documentId, firstBlockId, null, "parent", parent.text(), markdown,
-                    parent.pageFrom(), parent.pageTo(), parent.sectionPath(), parent.sha256(), ord++);
+            long parentId = ingest.insertChunk(new ChunkInsert(documentId, firstBlockId, null, "parent",
+                    parent.text(), markdown, parent.pageFrom(), parent.pageTo(), parent.sectionPath(),
+                    parent.sha256(), ord++));
             parentIds.add(parentId);
             linkBlocks(parentId, rows, parent.blockIndexes());
         }
@@ -259,8 +258,9 @@ public class IngestService {
                     : rows.get(parent.blockIndexes().get(0)).id();
             long parentId = parentIds.get(child.parentIndex());
             String markdown = parent.table() ? toMarkdown(parent.text()) : null;
-            long childId = ingest.insertChunk(documentId, firstBlockId, parentId, "child", child.text(), markdown,
-                    child.pageFrom(), child.pageTo(), parent.sectionPath(), child.sha256(), ord++);
+            long childId = ingest.insertChunk(new ChunkInsert(documentId, firstBlockId, parentId, "child",
+                    child.text(), markdown, child.pageFrom(), child.pageTo(), parent.sectionPath(),
+                    child.sha256(), ord++));
             linkBlocks(childId, rows, parent.blockIndexes());
         }
         return JsonText.object(Map.of("parents", result.parents().size(), "children", result.children().size()));

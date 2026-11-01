@@ -8,6 +8,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import com.hobozoo.aiqq.dao.SearchDao;
+import com.hobozoo.aiqq.entity.rag.IndexEntry;
 
 /**
  * 补写失败的 Lucene 索引，按退避重试。
@@ -29,14 +30,13 @@ public class IndexRetryService {
     @Scheduled(fixedDelayString = "${rag.index-retry.interval-ms:60000}")
     public void retry() {
         for (SearchDao.RetryRow row : search.dueRetries(BATCH)) {
-            SearchDao.IndexChunk chunk = search.findIndexChunk(row.chunkId());
+            IndexEntry chunk = search.findIndexChunk(row.chunkId());
             if (chunk == null) {
                 search.deleteRetry(row.id());
                 continue;
             }
             try {
-                lucene.indexOne(chunk.documentId(), chunk.chunkId(), chunk.parentId(), chunk.text(),
-                        chunk.pageFrom(), chunk.pageTo(), chunk.sectionPath());
+                lucene.indexOne(chunk);
                 search.deleteRetry(row.id());
             } catch (IOException e) {
                 log.warn("索引重试失败 chunk={}", row.chunkId(), e);

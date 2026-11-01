@@ -1,6 +1,7 @@
 package com.hobozoo.aiqq.common.util;
 
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -45,7 +46,7 @@ public final class JsonText {
             return value.toString();
         }
         if (value instanceof Map<?, ?> map) {
-            java.util.LinkedHashMap<String, Object> converted = new java.util.LinkedHashMap<>();
+            LinkedHashMap<String, Object> converted = new LinkedHashMap<>();
             map.forEach((key, item) -> converted.put(String.valueOf(key), item));
             return object(converted);
         }

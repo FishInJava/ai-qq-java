@@ -1,5 +1,6 @@
 package com.hobozoo.aiqq.dao;
 
+import java.sql.Array;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Repository;
 
 import com.hobozoo.aiqq.entity.rag.BlockDraft;
 import com.hobozoo.aiqq.entity.rag.BlockRow;
+import com.hobozoo.aiqq.entity.rag.ChunkInsert;
 import com.hobozoo.aiqq.entity.rag.ChunkRow;
 import com.hobozoo.aiqq.entity.rag.PageDraft;
 import com.hobozoo.aiqq.entity.rag.PageRow;
@@ -95,8 +97,7 @@ public class IngestDao {
         return keys.getKey().longValue();
     }
 
-    public long insertChunk(long documentId, long blockId, Long parentId, String level, String text, String textMd,
-                            int pageFrom, int pageTo, String[] sectionPath, String sha256, int ord) {
+    public long insertChunk(ChunkInsert chunk) {
         KeyHolder keys = new GeneratedKeyHolder();
         jdbc.update(connection -> {
             PreparedStatement ps = connection.prepareStatement("""
@@ -104,26 +105,26 @@ public class IngestDao {
                                         page_from, page_to, section_path, sha256, ord)
                     values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) returning id
                     """, new String[]{"id"});
-            ps.setLong(1, documentId);
-            if (blockId <= 0) {
+            ps.setLong(1, chunk.documentId());
+            if (chunk.blockId() <= 0) {
                 ps.setNull(2, Types.BIGINT);
             } else {
-                ps.setLong(2, blockId);
+                ps.setLong(2, chunk.blockId());
             }
-            if (parentId == null) {
+            if (chunk.parentId() == null) {
                 ps.setNull(3, Types.BIGINT);
             } else {
-                ps.setLong(3, parentId);
+                ps.setLong(3, chunk.parentId());
             }
-            ps.setString(4, level);
-            ps.setString(5, text);
-            ps.setString(6, textMd);
-            ps.setInt(7, text.length());
-            ps.setInt(8, pageFrom);
-            ps.setInt(9, pageTo);
-            ps.setArray(10, textArray(ps, sectionPath));
-            ps.setString(11, sha256);
-            ps.setInt(12, ord);
+            ps.setString(4, chunk.level());
+            ps.setString(5, chunk.text());
+            ps.setString(6, chunk.textMd());
+            ps.setInt(7, chunk.text().length());
+            ps.setInt(8, chunk.pageFrom());
+            ps.setInt(9, chunk.pageTo());
+            ps.setArray(10, textArray(ps, chunk.sectionPath()));
+            ps.setString(11, chunk.sha256());
+            ps.setInt(12, chunk.ord());
             return ps;
         }, keys);
         return keys.getKey().longValue();
@@ -168,7 +169,7 @@ public class IngestDao {
                 rs.getInt("char_count"), rs.getBoolean("is_empty")), documentId);
     }
 
-    private static java.sql.Array textArray(PreparedStatement ps, String[] values) throws SQLException {
+    private static Array textArray(PreparedStatement ps, String[] values) throws SQLException {
         return ps.getConnection().createArrayOf("text", values);
     }
 }

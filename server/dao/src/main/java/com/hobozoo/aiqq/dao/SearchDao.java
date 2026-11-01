@@ -7,6 +7,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
 import com.hobozoo.aiqq.entity.rag.ChunkHit;
+import com.hobozoo.aiqq.entity.rag.IndexEntry;
 import com.hobozoo.aiqq.entity.rag.Passage;
 
 /**
@@ -14,6 +15,9 @@ import com.hobozoo.aiqq.entity.rag.Passage;
  */
 @Repository
 public class SearchDao {
+
+    private static final RowMapper<ChunkBox> CHUNK_BOX = (rs, rowNum) -> new ChunkBox(rs.getInt("page_no"),
+            rs.getDouble("bbox_x0"), rs.getDouble("bbox_y0"), rs.getDouble("bbox_x1"), rs.getDouble("bbox_y1"));
 
     private final JdbcTemplate jdbc;
 
@@ -75,10 +79,6 @@ public class SearchDao {
     public record ChunkBoxes(long documentId, List<ChunkBox> boxes) {
     }
 
-    public record IndexChunk(long chunkId, long documentId, long parentId, String text, int pageFrom, int pageTo,
-                             String sectionPath) {
-    }
-
     public record RetryRow(long id, long chunkId, int attempts) {
     }
 
@@ -91,25 +91,23 @@ public class SearchDao {
                 join blocks b on b.id = cb.block_id
                 where cb.chunk_id = ?
                 order by b.page_no, b.order_no, b.id
-                """, (rs, rowNum) -> new ChunkBox(rs.getInt("page_no"), rs.getDouble("bbox_x0"),
-                rs.getDouble("bbox_y0"), rs.getDouble("bbox_x1"), rs.getDouble("bbox_y1")), chunkId);
+                """, CHUNK_BOX, chunkId);
         if (boxes.isEmpty()) {
             boxes = jdbc.query("""
                     select b.page_no, b.bbox_x0, b.bbox_y0, b.bbox_x1, b.bbox_y1
                     from chunks c join blocks b on b.id = c.block_id
                     where c.id = ?
-                    """, (rs, rowNum) -> new ChunkBox(rs.getInt("page_no"), rs.getDouble("bbox_x0"),
-                    rs.getDouble("bbox_y0"), rs.getDouble("bbox_x1"), rs.getDouble("bbox_y1")), chunkId);
+                    """, CHUNK_BOX, chunkId);
         }
         return new ChunkBoxes(documentId, boxes);
     }
 
-    public IndexChunk findIndexChunk(long chunkId) {
+    public IndexEntry findIndexChunk(long chunkId) {
         return jdbc.query("""
                 select c.id, c.document_id, coalesce(c.parent_id, c.id) as parent_id, c.text,
                        c.page_from, c.page_to, array_to_string(c.section_path, ' / ') as section_path
                 from chunks c where c.id = ?
-                """, (rs, rowNum) -> new IndexChunk(rs.getLong("id"), rs.getLong("document_id"),
+                """, (rs, rowNum) -> new IndexEntry(rs.getLong("id"), rs.getLong("document_id"),
                 rs.getLong("parent_id"), rs.getString("text"), rs.getInt("page_from"), rs.getInt("page_to"),
                 rs.getString("section_path")), chunkId).stream().findFirst().orElse(null);
     }

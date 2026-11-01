@@ -1,6 +1,8 @@
 package com.hobozoo.aiqq.controller;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -164,20 +166,29 @@ public class DocumentController {
         long start = 0;
         long end = length - 1;
         String[] parts = range.replace("bytes=", "").split("-", 2);
-        if (!parts[0].isBlank()) {
-            start = Long.parseLong(parts[0]);
-        }
-        if (parts.length > 1 && !parts[1].isBlank()) {
-            end = Long.parseLong(parts[1]);
+        try {
+            if (!parts[0].isBlank()) {
+                start = Long.parseLong(parts[0].strip());
+            }
+            if (parts.length > 1 && !parts[1].isBlank()) {
+                end = Long.parseLong(parts[1].strip());
+            }
+        } catch (NumberFormatException e) {
+            return ResponseEntity.status(HttpStatus.REQUESTED_RANGE_NOT_SATISFIABLE).build();
         }
         end = Math.min(Math.min(end, start + MAX_RANGE - 1), length - 1);
         if (start > end || start >= length) {
             return ResponseEntity.status(HttpStatus.REQUESTED_RANGE_NOT_SATISFIABLE).build();
         }
         byte[] data = new byte[(int) (end - start + 1)];
-        try (var channel = Files.newByteChannel(path)) {
+        try (SeekableByteChannel channel = Files.newByteChannel(path)) {
             channel.position(start);
-            channel.read(java.nio.ByteBuffer.wrap(data));
+            ByteBuffer buffer = ByteBuffer.wrap(data);
+            while (buffer.hasRemaining()) {
+                if (channel.read(buffer) <= 0) {
+                    break;
+                }
+            }
         }
         return ResponseEntity.status(HttpStatus.PARTIAL_CONTENT)
                 .contentType(PDF)

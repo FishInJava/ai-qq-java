@@ -14,6 +14,8 @@ import com.hobozoo.aiqq.entity.rag.SessionRow;
 @Service
 public class SessionService {
 
+    private static final int LIMIT = 50;
+
     private final LibraryDao library;
 
     public SessionService(LibraryDao library) {
@@ -21,7 +23,7 @@ public class SessionService {
     }
 
     public List<SessionRow> list() {
-        return library.sessions(50);
+        return library.sessions(LIMIT);
     }
 
     public List<MessageRow> messages(String sessionId) {

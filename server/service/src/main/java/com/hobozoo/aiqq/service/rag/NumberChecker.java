@@ -16,6 +16,7 @@ public final class NumberChecker {
     private record Token(String raw, double value) {
     }
 
+    private static final double TOLERANCE = 1e-6;
     private static final String CN = "零〇一二两三四五六七八九十百千万亿";
     private static final String UNITS = "万亿元|万亿|亿元|万元|亿美元|万美元|美元|亿|万|元|倍|%";
     private static final Pattern TOKEN = Pattern.compile(
@@ -67,7 +68,7 @@ public final class NumberChecker {
 
     private static boolean contains(List<Token> known, Token wanted) {
         for (Token token : known) {
-            if (Math.abs(token.value() - wanted.value()) <= 1e-6 * Math.max(1, Math.abs(wanted.value()))) {
+            if (Math.abs(token.value() - wanted.value()) <= TOLERANCE * Math.max(1, Math.abs(wanted.value()))) {
                 return true;
             }
         }

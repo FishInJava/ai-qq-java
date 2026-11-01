@@ -2,18 +2,20 @@ package com.hobozoo.aiqq.service.rag;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import org.springframework.stereotype.Service;
 
+import com.hobozoo.aiqq.common.util.JsonText;
 import com.hobozoo.aiqq.dao.LibraryDao;
 import com.hobozoo.aiqq.dao.SearchDao;
 import com.hobozoo.aiqq.entity.rag.ChunkHit;
 import com.hobozoo.aiqq.entity.rag.Passage;
-import com.hobozoo.aiqq.common.util.JsonText;
 
 import tools.jackson.databind.ObjectMapper;
 
@@ -49,6 +51,12 @@ public class RetrievalService {
         public record Refusal(double minFusionScore) {
         }
     }
+
+    private static final RetrievalConfig DEFAULT_CONFIG = new RetrievalConfig(
+            new RetrievalConfig.Bm25(40), new RetrievalConfig.Vector(40, 0.40),
+            new RetrievalConfig.Fusion(60, 20), new RetrievalConfig.Rerank(8),
+            new RetrievalConfig.Context(8000), new RetrievalConfig.Refusal(0.012), "");
+    private static final int TOP_PREVIEW = 5;
 
     private final LuceneIndexService lucene;
     private final SearchDao search;
@@ -119,7 +127,7 @@ public class RetrievalService {
             byId.put(passage.chunkId(), passage);
         }
         List<Passage> ordered = new ArrayList<>();
-        java.util.Set<Long> seen = new java.util.HashSet<>();
+        Set<Long> seen = new HashSet<>();
         int chars = 0;
         for (ChunkHit hit : fused) {
             Passage passage = byId.get(hit.parentId());
@@ -160,7 +168,7 @@ public class RetrievalService {
 
     private static String hits(List<ChunkHit> hits) {
         List<Map<String, Object>> items = new ArrayList<>();
-        for (ChunkHit hit : hits.stream().limit(5).toList()) {
+        for (ChunkHit hit : hits.stream().limit(TOP_PREVIEW).toList()) {
             items.add(Map.of("parent", hit.parentId(), "score", Math.round(hit.score() * 10000) / 10000.0));
         }
         return JsonText.object(Map.of("count", hits.size(), "top", items));
@@ -169,9 +177,7 @@ public class RetrievalService {
     private RetrievalConfig config() {
         String json = library.appConfig("retrieval");
         if (json == null || json.isBlank()) {
-            return new RetrievalConfig(new RetrievalConfig.Bm25(40), new RetrievalConfig.Vector(40, 0.40),
-                    new RetrievalConfig.Fusion(60, 20), new RetrievalConfig.Rerank(8),
-                    new RetrievalConfig.Context(8000), new RetrievalConfig.Refusal(0.012), "");
+            return DEFAULT_CONFIG;
         }
         return mapper.readValue(json, RetrievalConfig.class);
     }

@@ -1,5 +1,6 @@
 package com.hobozoo.aiqq.service.rag;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -69,7 +70,7 @@ public class IngestWorker {
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
                 log.error("任务循环异常", e);
             }
         }
@@ -94,7 +95,7 @@ public class IngestWorker {
                 ingest.ingest(job.documentId(), jobId);
                 library.updateJob(jobId, "done", "done", 100, 1, null);
             }
-        } catch (Exception e) {
+        } catch (IOException | RuntimeException e) {
             log.warn("任务 {} 失败", jobId, e);
             library.updateJob(jobId, "failed", job.stage(), job.progress(), job.done(), e.getMessage());
         }

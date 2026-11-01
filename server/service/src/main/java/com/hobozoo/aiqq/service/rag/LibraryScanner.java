@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.List;
@@ -15,7 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import com.hobozoo.aiqq.service.rag.PipelineConfigService;
 import com.hobozoo.aiqq.dao.LibraryDao;
 import com.hobozoo.aiqq.entity.rag.DocumentRow;
 import com.hobozoo.aiqq.entity.rag.JobRow;
@@ -91,7 +91,7 @@ public class LibraryScanner {
                 digest.update(buffer, 0, read);
             }
             return HexFormat.of().formatHex(digest.digest());
-        } catch (java.security.NoSuchAlgorithmException e) {
+        } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);
         }
     }

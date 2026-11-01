@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import com.hobozoo.aiqq.common.util.JsonText;
 import com.hobozoo.aiqq.dao.LibraryDao;
+import com.hobozoo.aiqq.entity.rag.EvalCaseInsert;
 import com.hobozoo.aiqq.entity.rag.EvalCaseRow;
 import com.hobozoo.aiqq.entity.rag.Passage;
 
@@ -73,8 +74,8 @@ public class EvalService {
             sources.add(item);
         }
         String[] keywords = request.keywords() == null ? new String[0] : request.keywords().toArray(new String[0]);
-        return library.insertEvalCase(question, request.kind(), request.expectedDoc(), request.pageFrom(),
-                request.pageTo(), keywords, JsonText.array(sources));
+        return library.insertEvalCase(new EvalCaseInsert(question, request.kind(), request.expectedDoc(),
+                request.pageFrom(), request.pageTo(), keywords, JsonText.array(sources)));
     }
 
     public RunResult run() {
@@ -91,7 +92,7 @@ public class EvalService {
         try {
             result = retrieval.retrieve(evalCase.question(), null, stage -> {
             });
-        } catch (IOException e) {
+        } catch (IOException | RuntimeException e) {
             return new CaseResult(evalCase.id(), evalCase.question(), evalCase.kind(), false,
                     "检索失败：" + e.getMessage());
         }

@@ -71,8 +71,10 @@ public class ArkChatClient {
             throw new IllegalStateException("模型请求被中断", e);
         }
         if (response.statusCode() >= 300) {
-            String error = new String(response.body().readAllBytes(), StandardCharsets.UTF_8);
-            throw new IllegalStateException("模型接口返回 " + response.statusCode() + "：" + error);
+            try (InputStream input = response.body()) {
+                String error = new String(input.readAllBytes(), StandardCharsets.UTF_8);
+                throw new IllegalStateException("模型接口返回 " + response.statusCode() + "：" + error);
+            }
         }
 
         int tokensIn = 0;

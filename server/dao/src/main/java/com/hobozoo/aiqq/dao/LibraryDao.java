@@ -11,6 +11,7 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
 import com.hobozoo.aiqq.entity.rag.DocumentRow;
+import com.hobozoo.aiqq.entity.rag.EvalCaseInsert;
 import com.hobozoo.aiqq.entity.rag.EvalCaseRow;
 import com.hobozoo.aiqq.entity.rag.EventRow;
 import com.hobozoo.aiqq.entity.rag.HealthRow;
@@ -355,8 +356,7 @@ public class LibraryDao {
                 (String[]) rs.getArray("expected_keywords").getArray(), rs.getString("expected_sources")));
     }
 
-    public long insertEvalCase(String question, String kind, String expectedDoc, Integer pageFrom, Integer pageTo,
-                               String[] keywords, String expectedSourcesJson) {
+    public long insertEvalCase(EvalCaseInsert evalCase) {
         KeyHolder keys = new GeneratedKeyHolder();
         jdbc.update(connection -> {
             var statement = connection.prepareStatement("""
@@ -364,13 +364,13 @@ public class LibraryDao {
                                             expected_keywords, expected_sources)
                     values (?, ?, ?, ?, ?, ?, cast(? as jsonb)) returning id
                     """, new String[]{"id"});
-            statement.setString(1, question);
-            statement.setString(2, kind);
-            statement.setString(3, expectedDoc);
-            statement.setObject(4, pageFrom);
-            statement.setObject(5, pageTo);
-            statement.setArray(6, connection.createArrayOf("text", keywords));
-            statement.setString(7, expectedSourcesJson);
+            statement.setString(1, evalCase.question());
+            statement.setString(2, evalCase.kind());
+            statement.setString(3, evalCase.expectedDoc());
+            statement.setObject(4, evalCase.pageFrom());
+            statement.setObject(5, evalCase.pageTo());
+            statement.setArray(6, connection.createArrayOf("text", evalCase.keywords()));
+            statement.setString(7, evalCase.expectedSourcesJson());
             return statement;
         }, keys);
         return keys.getKey().longValue();

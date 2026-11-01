@@ -22,6 +22,8 @@ import com.hobozoo.aiqq.service.rag.ChatService;
 @RequestMapping("/api")
 public class ChatController {
 
+    private static final int SNIPPET_CHARS = 40;
+
     private final ChatService chat;
 
     public ChatController(ChatService chat) {
@@ -102,7 +104,7 @@ public class ChatController {
 
     private static String snippet(String text) {
         String flat = text.replaceAll("\\s+", " ").strip();
-        return flat.length() <= 40 ? flat : flat.substring(0, 40) + "…";
+        return flat.length() <= SNIPPET_CHARS ? flat : flat.substring(0, SNIPPET_CHARS) + "…";
     }
 
     private static void send(SseEmitter emitter, String name, Object data) {
