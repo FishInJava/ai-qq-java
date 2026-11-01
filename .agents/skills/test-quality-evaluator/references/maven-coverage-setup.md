@@ -6,7 +6,7 @@
 
 ## 1. 环境预检
 
-本机（2026-10-29）`JAVA_HOME` 指向 Java 8，而项目要求 Java 21：
+项目要求 Java 21。`JAVA_HOME` 与 PATH 上的 `java` 可能指向不同版本，一律以 `mvn -v` 实测为准：
 
 ```powershell
 $env:JAVA_HOME = (Get-Command java).Source | Split-Path -Parent | Split-Path -Parent
@@ -252,7 +252,7 @@ mvn -f server/pom.xml -pl common -am test `
 
 | 症状 | 原因 | 处理 |
 |---|---|---|
-| `release version 21 not supported` | Maven 用了 JDK 8 | 修正 `JAVA_HOME`，见第 1 节 |
+| `release version 21 not supported` | Maven 实际使用的 JDK 不是 21 | 用 `mvn -v` 确认，修正 `JAVA_HOME`/PATH，见第 1 节 |
 | `No tests to run` / 0 tests | 命名或路径不符 | 测试放 `src/test/java`，类名 `*Test`；`mvn -X` 查看 Surefire 扫描 |
 | `jacoco.exec` 为空 | `prepare-agent` 在 `test` 之后，或 `argLine` 被覆盖 | 调整命令顺序；POM 用 `@{argLine}` |
 | 报告里没有某个模块 | 该模块没执行 `test` | `-pl <module> -am`，或全量构建 |

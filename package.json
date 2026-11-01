@@ -9,6 +9,8 @@
   },
   "scripts": {
     "verify-notes": "node .agents/skills/write-notes-like-deepseek/scripts/verify-agent-note-tree.ts && node .agents/skills/write-notes-like-deepseek/scripts/verify-agent-note-format.ts && node .agents/skills/write-notes-like-deepseek/scripts/verify-archived-agent-notes.ts",
+    "verify-skills": "node .agents/skills/verify-skills/scripts/verify-skills.ts",
+    "verify-skills-json": "node .agents/skills/verify-skills/scripts/verify-skills.ts --json",
     "verify-note-tree": "node .agents/skills/write-notes-like-deepseek/scripts/verify-agent-note-tree.ts",
     "verify-note-format": "node .agents/skills/write-notes-like-deepseek/scripts/verify-agent-note-format.ts",
     "verify-archived": "node .agents/skills/write-notes-like-deepseek/scripts/verify-archived-agent-notes.ts",
