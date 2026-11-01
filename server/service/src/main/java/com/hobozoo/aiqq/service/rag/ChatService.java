@@ -9,6 +9,7 @@ import java.util.Map;
 import org.springframework.stereotype.Service;
 
 import com.hobozoo.aiqq.common.util.JsonText;
+import com.hobozoo.aiqq.common.util.Snippet;
 import com.hobozoo.aiqq.dao.LibraryDao;
 import com.hobozoo.aiqq.entity.rag.Passage;
 import com.hobozoo.aiqq.entity.rag.QueryRow;
@@ -100,7 +101,7 @@ public class ChatService {
                 passages = result.passages();
                 int index = 1;
                 for (Passage passage : passages) {
-                    listener.onCitation(index++, passage, false);
+                    emitCitation(queryId, index++, passage, false, listener);
                 }
             }
 
@@ -204,7 +205,7 @@ public class ChatService {
                            List<Passage> candidates) {
         int index = 1;
         for (Passage passage : candidates.stream().limit(CANDIDATES).toList()) {
-            listener.onCitation(index++, passage, true);
+            emitCitation(queryId, index++, passage, true, listener);
         }
         long latency = elapsed(startedAt);
         listener.onDelta(REFUSAL);
@@ -212,6 +213,13 @@ public class ChatService {
         Outcome outcome = new Outcome(queryId, sessionId, latency, 0, 0, true, 0, 0, 0);
         listener.onDone(outcome);
         return outcome;
+    }
+
+    private void emitCitation(String queryId, int index, Passage passage, boolean candidate, Listener listener) {
+        String section = String.join(" / ", passage.sectionPath());
+        library.insertCitation(queryId, index, passage.chunkId(), passage.documentId(), passage.filename(),
+                passage.pageFrom(), passage.pageTo(), section, Snippet.of(passage.text()), candidate);
+        listener.onCitation(index, passage, candidate);
     }
 
     private List<Map<String, String>> messages(String queryId, String sessionId, String question,

@@ -29,13 +29,23 @@ export default function PdfPreview({ documentId, page, boxes, onPageChange }: Pr
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    let cancelled = false
     setPdf(null)
     setError(null)
     const task = getDocument({ url: `/api/documents/${documentId}/file` })
-    task.promise.then(setPdf).catch((reason: unknown) => {
-      setError(reason instanceof Error ? reason.message : String(reason))
-    })
+    task.promise
+      .then((document) => {
+        if (!cancelled) {
+          setPdf(document)
+        }
+      })
+      .catch((reason: unknown) => {
+        if (!cancelled) {
+          setError(reason instanceof Error ? reason.message : String(reason))
+        }
+      })
     return () => {
+      cancelled = true
       void task.destroy()
     }
   }, [documentId])

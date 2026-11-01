@@ -1,6 +1,7 @@
 package com.hobozoo.aiqq.dao;
 
 import java.sql.ResultSet;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -10,6 +11,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
+import com.hobozoo.aiqq.entity.rag.CitationRow;
 import com.hobozoo.aiqq.entity.rag.DocumentRow;
 import com.hobozoo.aiqq.entity.rag.EvalCaseInsert;
 import com.hobozoo.aiqq.entity.rag.EvalCaseRow;
@@ -17,6 +19,7 @@ import com.hobozoo.aiqq.entity.rag.EventRow;
 import com.hobozoo.aiqq.entity.rag.HealthRow;
 import com.hobozoo.aiqq.entity.rag.JobRow;
 import com.hobozoo.aiqq.entity.rag.MessageRow;
+import com.hobozoo.aiqq.entity.rag.NumberCheckRow;
 import com.hobozoo.aiqq.entity.rag.QueryRow;
 import com.hobozoo.aiqq.entity.rag.QueryStageRow;
 import com.hobozoo.aiqq.entity.rag.RunRow;
@@ -48,6 +51,11 @@ public class LibraryDao {
             (Integer) rs.getObject("tokens_out"), (Integer) rs.getObject("latency_ms"),
             (Integer) rs.getObject("first_token_ms"), rs.getString("status"), rs.getString("error"),
             rs.getTimestamp("created_at").toInstant().toString());
+
+    private static final RowMapper<CitationRow> CITATION = (ResultSet rs, int rowNum) -> new CitationRow(
+            rs.getString("query_id"), rs.getInt("idx"), rs.getLong("chunk_id"), rs.getLong("document_id"),
+            rs.getString("doc"), rs.getInt("page_from"), rs.getInt("page_to"), rs.getString("section"),
+            rs.getString("snippet"), rs.getBoolean("candidate"));
 
     private static final RowMapper<JobRow> JOB = (ResultSet rs, int rowNum) -> new JobRow(
             rs.getLong("id"), rs.getString("type"), rs.getString("source_path"),
@@ -333,16 +341,53 @@ public class LibraryDao {
 
     public List<MessageRow> messages(String sessionId) {
         return jdbc.query("""
-                select role, content, query_id, created_at from (
-                    select 'user' as role, question as content, id as query_id, created_at, 0 as ord
+                select role, content, query_id, created_at, latency_ms, first_token_ms, refused from (
+                    select 'user' as role, question as content, id as query_id, created_at, 0 as ord,
+                           null::int as latency_ms, null::int as first_token_ms, false as refused
                     from queries where session_id = ?
                     union all
-                    select 'assistant' as role, answer as content, id as query_id, created_at, 1 as ord
+                    select 'assistant' as role, answer as content, id as query_id, created_at, 1 as ord,
+                           latency_ms, first_token_ms, status = 'refused' as refused
                     from queries where session_id = ? and answer is not null
                 ) merged order by created_at, ord
                 """, (ResultSet rs, int rowNum) -> new MessageRow(
                 rs.getString("role"), rs.getString("content"), rs.getString("query_id"),
-                rs.getTimestamp("created_at").toInstant().toString()), sessionId, sessionId);
+                rs.getTimestamp("created_at").toInstant().toString(),
+                (Integer) rs.getObject("latency_ms"), (Integer) rs.getObject("first_token_ms"),
+                rs.getBoolean("refused")), sessionId, sessionId);
+    }
+
+    public void insertCitation(String queryId, int index, long chunkId, long documentId, String doc,
+                               int pageFrom, int pageTo, String section, String snippet, boolean candidate) {
+        jdbc.update("""
+                insert into query_citations (query_id, idx, chunk_id, document_id, doc, page_from, page_to,
+                                             section, snippet, candidate)
+                values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, queryId, index, chunkId, documentId, doc, pageFrom, pageTo, section, snippet, candidate);
+    }
+
+    public List<CitationRow> citations(String sessionId) {
+        return jdbc.query("""
+                select c.query_id, c.idx, c.chunk_id, c.document_id, c.doc, c.page_from, c.page_to,
+                       c.section, c.snippet, c.candidate
+                from query_citations c
+                join queries q on q.id = c.query_id
+                where q.session_id = ?
+                order by c.query_id, c.idx
+                """, CITATION, sessionId);
+    }
+
+    public List<NumberCheckRow> numberChecks(String sessionId) {
+        return jdbc.query("""
+                select s.query_id,
+                       (s.payload ->> 'total')::int as total,
+                       coalesce(array(select jsonb_array_elements_text(s.payload -> 'missing')), '{}') as missing
+                from query_stages s
+                join queries q on q.id = s.query_id
+                where q.session_id = ? and s.stage = 'number_check'
+                """, (ResultSet rs, int rowNum) -> new NumberCheckRow(
+                rs.getString("query_id"), rs.getInt("total"),
+                Arrays.asList((String[]) rs.getArray("missing").getArray())), sessionId);
     }
 
     public List<EvalCaseRow> evalCases() {

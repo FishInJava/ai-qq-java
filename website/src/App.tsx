@@ -1,35 +1,48 @@
-import { useEffect, useState } from 'react'
+import { Suspense } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
-import { api, type Health } from './api/client'
+import { api } from './api/client'
+import { useApiQuery } from './api/query'
+import { errorMessage } from './lib/errors'
+import { preload } from './preload'
+
+const NAV = [
+  { to: '/library', label: '文档库', load: preload.library },
+  { to: '/chat', label: '对话', load: preload.chat },
+  { to: '/jobs', label: '任务', load: preload.jobs },
+] as const
 
 export default function App() {
-  const [health, setHealth] = useState<Health | null>(null)
-  const [healthError, setHealthError] = useState<string | null>(null)
-
-  useEffect(() => {
-    api
-      .health()
-      .then(setHealth)
-      .catch((error: unknown) => setHealthError(error instanceof Error ? error.message : String(error)))
-  }, [])
+  const health = useApiQuery('/api/health', api.health)
+  const status = health.data
 
   return (
     <div className="shell">
-      <header className="topbar">
+      <header className="topbar" style={{ viewTransitionName: 'site-header' }}>
         <div className="brand">JustRAG</div>
         <nav>
-          <NavLink to="/library">文档库</NavLink>
-          <NavLink to="/chat">对话</NavLink>
-          <NavLink to="/jobs">任务</NavLink>
+          {NAV.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              onMouseEnter={() => void item.load()}
+              onFocus={() => void item.load()}
+            >
+              {item.label}
+            </NavLink>
+          ))}
         </nav>
-        <div className={health?.db ? 'health ok' : 'health bad'}>
-          {health
-            ? `PG ${health.postgres} · pgvector ${health.pgvector} · ${health.tables} 张表 · ${health.latencyMs}ms`
-            : healthError ?? '连接中'}
+        <div className={status?.db ? 'health ok' : 'health bad'}>
+          {status
+            ? `PG ${status.postgres} · pgvector ${status.pgvector} · ${status.tables} 张表 · ${status.latencyMs}ms`
+            : health.error
+              ? errorMessage(health.error)
+              : '连接中'}
         </div>
       </header>
       <main>
-        <Outlet />
+        <Suspense fallback={<p className="empty">加载中</p>}>
+          <Outlet />
+        </Suspense>
       </main>
     </div>
   )

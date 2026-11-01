@@ -1,21 +1,22 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useRef, useState, ViewTransition } from 'react'
 import { api, type DocumentSummary } from '../api/client'
+import { invalidateQuery, useApiQuery } from '../api/query'
+import { DirectionalTransition, ForwardLink } from '../components/PageTransition'
+import { QueryState } from '../components/QueryState'
+import { errorMessage } from '../lib/errors'
+import { preload } from '../preload'
 
 export default function LibraryPage() {
-  const [documents, setDocuments] = useState<DocumentSummary[]>([])
+  const documents = useApiQuery('/api/documents', api.documents)
   const [message, setMessage] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const fileInput = useRef<HTMLInputElement>(null)
+  const items = documents.data?.items ?? []
 
-  const reload = useCallback(() => {
-    api
-      .documents()
-      .then((result) => setDocuments(result.items))
-      .catch((error: unknown) => setMessage(error instanceof Error ? error.message : String(error)))
-  }, [])
-
-  useEffect(reload, [reload])
+  const reload = async () => {
+    invalidateQuery('/api/documents')
+    await documents.refresh()
+  }
 
   const scan = async () => {
     setBusy(true)
@@ -23,9 +24,9 @@ export default function LibraryPage() {
     try {
       const { jobId } = await api.scan()
       setMessage(`扫描任务 ${jobId} 已排队`)
-      reload()
+      await reload()
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : String(error))
+      setMessage(errorMessage(error))
     } finally {
       setBusy(false)
     }
@@ -39,9 +40,9 @@ export default function LibraryPage() {
     setMessage(null)
     try {
       await api.deleteDocument(document.id)
-      reload()
+      await reload()
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : String(error))
+      setMessage(errorMessage(error))
     } finally {
       setBusy(false)
     }
@@ -53,9 +54,9 @@ export default function LibraryPage() {
     try {
       const { jobId, documentId } = await api.upload(file)
       setMessage(`上传任务 ${jobId}：文档 ${documentId}`)
-      reload()
+      await reload()
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : String(error))
+      setMessage(errorMessage(error))
     } finally {
       setBusy(false)
       if (fileInput.current) {
@@ -65,71 +66,84 @@ export default function LibraryPage() {
   }
 
   return (
-    <section className="page">
-      <div className="page-head">
-        <h1>文档库</h1>
-        <div className="actions">
-          <button onClick={scan} disabled={busy}>
-            扫描目录
-          </button>
-          <button onClick={() => fileInput.current?.click()} disabled={busy}>
-            上传 PDF
-          </button>
-          <input
-            ref={fileInput}
-            type="file"
-            accept="application/pdf"
-            hidden
-            onChange={(event) => {
-              const file = event.target.files?.[0]
-              if (file) {
-                void upload(file)
-              }
-            }}
-          />
+    <DirectionalTransition>
+      <section className="page">
+        <div className="page-head">
+          <h1>文档库</h1>
+          <div className="actions">
+            <button onClick={() => void scan()} disabled={busy}>
+              扫描目录
+            </button>
+            <button onClick={() => fileInput.current?.click()} disabled={busy}>
+              上传 PDF
+            </button>
+            <input
+              ref={fileInput}
+              type="file"
+              accept="application/pdf"
+              hidden
+              onChange={(event) => {
+                const file = event.target.files?.[0]
+                if (file) {
+                  void upload(file)
+                }
+              }}
+            />
+          </div>
         </div>
-      </div>
 
-      {message && <p className="notice">{message}</p>}
+        {message ? <p className="notice">{message}</p> : null}
 
-      {documents.length === 0 ? (
-        <p className="empty">还没有文档。点「扫描目录」导入 F:\研报。</p>
-      ) : (
-        <table className="grid">
-          <thead>
-            <tr>
-              <th>文件</th>
-              <th>类别</th>
-              <th>页数</th>
-              <th>状态</th>
-              <th>管线版本</th>
-              <th>错误</th>
-              <th>操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            {documents.map((document) => (
-              <tr key={document.id}>
-                <td>
-                  <Link to={`/documents/${document.id}/pipeline`}>{document.filename}</Link>
-                </td>
-                <td>{document.category}</td>
-                <td>{document.pages}</td>
-                <td>
-                  <span className={`chip ${document.status}`}>{document.status}</span>
-                </td>
-                <td>{document.pipelineVersion ?? '-'}</td>
-                <td className="error-text">{document.error ?? ''}</td>
-                <td>
-                  <button onClick={() => void remove(document)} disabled={busy}>
-                    删除
-                  </button>
-                </td>
+        <QueryState
+          loading={!documents.data && !documents.error}
+          error={documents.error}
+          empty={items.length === 0}
+          emptyText="还没有文档。点「扫描目录」导入 F:\研报。"
+        >
+          <table className="grid">
+            <thead>
+              <tr>
+                <th>文件</th>
+                <th>类别</th>
+                <th>页数</th>
+                <th>状态</th>
+                <th>管线版本</th>
+                <th>错误</th>
+                <th>操作</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-    </section>
+            </thead>
+            <tbody>
+              {items.map((document) => (
+                <tr key={document.id}>
+                  <td>
+                    <ViewTransition name={`doc-title-${document.id}`} share="text-morph" default="none">
+                      <ForwardLink
+                        to={`/documents/${document.id}/pipeline`}
+                        state={{ document: { id: document.id, filename: document.filename } }}
+                        preload={preload.pipeline}
+                      >
+                        {document.filename}
+                      </ForwardLink>
+                    </ViewTransition>
+                  </td>
+                  <td>{document.category}</td>
+                  <td>{document.pages}</td>
+                  <td>
+                    <span className={`chip ${document.status}`}>{document.status}</span>
+                  </td>
+                  <td>{document.pipelineVersion ?? '-'}</td>
+                  <td className="error-text">{document.error ?? ''}</td>
+                  <td>
+                    <button onClick={() => void remove(document)} disabled={busy}>
+                      删除
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </QueryState>
+      </section>
+    </DirectionalTransition>
   )
 }

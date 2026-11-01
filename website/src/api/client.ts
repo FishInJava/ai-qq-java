@@ -94,6 +94,11 @@ export type ChatMessage = {
   content: string
   queryId: string
   createdAt: string
+  latencyMs?: number | null
+  firstTokenMs?: number | null
+  refused?: boolean
+  citations?: Citation[]
+  numberCheck?: NumberCheck | null
 }
 
 export type Citation = {

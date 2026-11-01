@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import com.hobozoo.aiqq.common.util.Snippet;
 import com.hobozoo.aiqq.entity.rag.Passage;
 import com.hobozoo.aiqq.service.rag.ChatService;
 
@@ -21,8 +22,6 @@ import com.hobozoo.aiqq.service.rag.ChatService;
 @RestController
 @RequestMapping("/api")
 public class ChatController {
-
-    private static final int SNIPPET_CHARS = 40;
 
     private final ChatService chat;
 
@@ -64,7 +63,7 @@ public class ChatController {
                             "pageTo", passage.pageTo(),
                             "section", String.join(" / ", passage.sectionPath()),
                             "chunkId", passage.chunkId(),
-                            "snippet", snippet(passage.text()),
+                            "snippet", Snippet.of(passage.text()),
                             "candidate", candidate));
                 }
 
@@ -100,11 +99,6 @@ public class ChatController {
             emitter.complete();
         }
         return emitter;
-    }
-
-    private static String snippet(String text) {
-        String flat = text.replaceAll("\\s+", " ").strip();
-        return flat.length() <= SNIPPET_CHARS ? flat : flat.substring(0, SNIPPET_CHARS) + "…";
     }
 
     private static void send(SseEmitter emitter, String name, Object data) {

@@ -1,11 +1,14 @@
+import { lazy } from 'react'
 import { createBrowserRouter } from 'react-router-dom'
 import App from './App'
-import LibraryPage from './pages/LibraryPage'
-import ChatPage from './pages/ChatPage'
-import JobsPage from './pages/JobsPage'
-import JobDetailPage from './pages/JobDetailPage'
-import PipelinePage from './pages/PipelinePage'
-import TracePage from './pages/TracePage'
+import { preload } from './preload'
+
+const LibraryPage = lazy(preload.library)
+const ChatPage = lazy(preload.chat)
+const JobsPage = lazy(preload.jobs)
+const JobDetailPage = lazy(preload.job)
+const PipelinePage = lazy(preload.pipeline)
+const TracePage = lazy(preload.trace)
 
 export const router = createBrowserRouter([
   {
