@@ -21,3 +21,4 @@ description: playbook就是某个具体工作流，如果确认要使用某个pl
 	|---|---|---|
 	| test-pb | 测试相关工作流；Step 1 执行 `0test-skill` | `.agents/skills/work-work/playbooks/test-pb/test-playbook.md` |
 	| code-pb | 写代码工作流：写代码、本地测试、本地 commit | `.agents/skills/work-work/playbooks/code.md` |
+	| investigation-pb | 只读调查：X 怎么运作、为什么这样设计、该选 A 还是 B；不改代码、不 commit | `.agents/skills/work-work/playbooks/investigation.md` |
